@@ -1,0 +1,4 @@
+.text
+
+.syntax unified
+.thumb
