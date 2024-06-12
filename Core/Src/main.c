@@ -42,22 +42,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+  // test ejercicio 1
+  int16_t vecIn1[] = {0x0010}; //0x100
+  //int16_t vecIn1[] = {0x0010, 0x0001, 0x0001, 0x0001}; //0x40
+  //int16_t vecIn1[] = {0x0010, 0x0001, 0x0001, 0x0001, 0x0001}; //0x34
+  //int16_t vecIn1[] = {0x0001, 0x0001, 0x0001, 0x0001, 0x0001}; //0x01
+  //int16_t vecIn1[] = {0x0000, 0x0000, 0x0000, 0x0000, 0x0000}; //0x00
+  uint32_t longitud1 = sizeof(vecIn1)/sizeof(int16_t);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-// Ejercicio 1
-uint32_t asm_potencia (int16_t * vecIn, uint32_t longitud);
-uint32_t asm_potencia_DSP (int16_t * vecIn, uint32_t longitud);
 
-// Ejercicio 2
-void asm_medDif(int8_t * e, int8_t *x, int8_t *y, uint16_t longitud);
-void asm_medDif_DSP(int8_t * e, int8_t *x, int8_t *y, uint16_t longitud);
-
-// Ejercicio 3
-void asm_eco (int16_t * signal, int16_t *eco, uint32_t longitud);
-void asm_eco_DSP (int16_t * signal, int16_t *eco, uint32_t longitud);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -74,7 +70,7 @@ void asm_eco_DSP (int16_t * signal, int16_t *eco, uint32_t longitud);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint32_t potencia = asm_potencia(vecIn1, longitud1);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
