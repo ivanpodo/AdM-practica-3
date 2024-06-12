@@ -18,10 +18,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "asm_func.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "asm_func.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,17 +48,6 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-// Ejercicio 1
-uint32_t asm_potencia (int16_t * vecIn, uint32_t longitud);
-uint32_t asm_potencia_DSP (int16_t * vecIn, uint32_t longitud);
-
-// Ejercicio 2
-void asm_medDif(int8_t * e, int8_t *x, int8_t *y, uint16_t longitud);
-void asm_medDif_DSP(int8_t * e, int8_t *x, int8_t *y, uint16_t longitud);
-
-// Ejercicio 3
-void asm_eco (int16_t * signal, int16_t *eco, uint32_t longitud);
-void asm_eco_DSP (int16_t * signal, int16_t *eco, uint32_t longitud);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -95,6 +85,24 @@ int main(void)
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
+
+  int16_t vecIn[] = {1, -2, 3, -4, 5};
+  uint32_t longitud1 = sizeof(vecIn) / sizeof(vecIn[0]);
+  uint32_t potencia = asm_potencia(vecIn, longitud1);
+
+  int8_t x[] = {10, 20, 30, 40, 50};
+  int8_t y[] = {5, 15, 25, 35, 45};
+  uint16_t longitud2 = sizeof(x) / sizeof(x[0]);
+  int8_t e[longitud2];
+
+  asm_medDif(e, x, y, longitud2);
+
+
+  int16_t signal[] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+  uint32_t longitud3 = sizeof(signal) / sizeof(signal[0]);
+  int16_t eco[longitud3];
+
+  asm_eco(signal, eco, longitud3);
 
   /* USER CODE END 2 */
 
