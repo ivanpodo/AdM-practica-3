@@ -89,6 +89,7 @@ int main(void)
   int16_t vecIn[] = {1, -2, 3, -4, 5};
   uint32_t longitud1 = sizeof(vecIn) / sizeof(vecIn[0]);
   uint32_t potencia = asm_potencia(vecIn, longitud1);
+  (void)potencia;
 
   int8_t x[] = {10, 20, 30, 40, 50};
   int8_t y[] = {5, 15, 25, 35, 45};
@@ -97,10 +98,14 @@ int main(void)
 
   asm_medDif(e, x, y, longitud2);
 
-
-  int16_t signal[] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+  //int16_t signal[] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+  int16_t signal[4096];
+  for(uint16_t i = 0u; i < 4096u; i++)
+  {
+	  signal[i] = 0x10;
+  }
   uint32_t longitud3 = sizeof(signal) / sizeof(signal[0]);
-  int16_t eco[longitud3];
+  int16_t eco[4096];
 
   asm_eco(signal, eco, longitud3);
 

@@ -39,6 +39,8 @@
 		sub r2, #1     				// Decrementar en 1 indice de vecIn
 
 		ldrsh r3, [r0, r2, LSL #1]	// Cargar siguiente elemento de vecIn
+		muls  r3, r3, r3
+
 		add r4, r3, r4				// Acumular
 
 		cbz r2, potencia_end		// Si indice de vectorIn no es 0, repetir el loop
@@ -103,15 +105,15 @@
 		cbz r3, medDif_end			// Checkear si longitud es cero
 
 	medDif_loop:
-		sub r3, #1     				// Decrementar en 1 indice n
+		sub r3, #1     			// Decrementar en 1 indice n
 
 		ldrsb r4, [r1, r3]			// Cargar siguiente elemento de x
 		ldrsb r5, [r2, r3]			// Cargar siguiente elemento de y
 
 		sub r6, r4, r5				// Resta x[n]-y[n]
-		asrs r6, r6, #1				// Divir entre 2
+		asr r6, r6, #1				// Divir entre 2
 
-		strb r6, [r2, r3]			// Cargar siguiente elemento de x
+		strb r6, [r0, r3]			// Cargar siguiente elemento de e
 
 		cbz r3, medDif_end			// Si indice n no es 0, repetir el loop
 		b medDif_loop
@@ -172,37 +174,48 @@
 .global asm_eco
 .thumb_func
 	asm_eco:
-		push {r4-r6}
+		push {r4-r7}
 
 		cbz r0, eco_end					// Checkear si *e es NULL
 		cbz r1, eco_end					// Checkear si *x es NULL
 		cbz r2, eco_end					// Checkear si longitud es cero
+		mov r3, #882					// Retardo
 
 	eco_loop:
 		sub r2, #1     					// Decrementar en 1 indice n
 
-		// Sin eco
-		cmp r2, r3									// Comparar índice <= 882
-		itt lt										// Si es menor solo copio valor actual de signal[] a eco[]
-		ldrshlt r4, [r0, r2, lsl #1]
-		strhlt r4, [r1, r2, lsl #1]
-		blt eco_loop
+		ldrsh r4, [r0, r2, lsl #1]		// Cargar valor actual de signal[]
+		mov   r6, r4					// Copiar a salida
+
+		cmp   r2, r3					// Comparar índice <= 882
+		blt   eco_save
 
 		// Con eco
-		ldrsh r4, [r0, r2, lsl #1]					// Cargar valor actual de signal[]
-		sub r7, r2, r3
-		ldrsh r5, [r0, r7, lsl #1] 					// Cargar valor defasado de signal[]
+		sub   r7, r2, r3
+		ldrsh r5, [r0, r7, lsl #1] 		// Cargar valor defasado de signal[]
+		asr   r5, r5, #1				// Dividir valor desfasado entre 2
+		add   r6, r4, r5				// Aplicar eco
 
-		asrs r5, r5, #1								// Dividir valor desfasado entre 2
-		add r6, r4, r5								// Aplicar eco
-		strh r6, [r1, r2, lsl #1]					// Guardar el resultado en eco[]
+	eco_save:
+		strh  r6, [r1, r2, lsl #1]		// Guardar el resultado en eco[]
 
-		cbz r2, eco_end								// Si indice no es 0, repetir el loop
-		b eco_loop
+		cbz   r2, eco_end				// Si indice no es 0, repetir el loop
+		b     eco_loop
 
 	eco_end:
-		pop {r4-r6}
+		pop {r4-r7}
 		bx lr               			// Volver de la función
+
+// -------------------------------
+//    e[n]    = s[n] + s[n-882]/2
+//
+//    e[0]    = s[0]
+//     ...
+//    e[881]  = s[881]
+//    e[882]  = s[882] + s[0]/2
+//     ...
+//    e[4095] = s[4095 + 882]/2
+// -------------------------------
 
 // **************************************************************************
 // Ejercicio 3B
