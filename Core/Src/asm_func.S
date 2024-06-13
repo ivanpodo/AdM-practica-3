@@ -63,19 +63,48 @@
 //
 // r0: *vecIn
 // r1: longitud / indice de vecIn
-// r2
-// r3:
+// r2: indice de vecIn
+// r3: valor actual
+// r4: acumulador
+// r5: paridad
 // **************************************************************************
-.global asm_potencia_DSP
-.thumb_func
-	asm_potencia_DSP:
+.global asm_potencia_DSP 
+.thumb_func 
+	asm_potencia_DSP: 
+		push {r4-r5}
+		mov r4, #0					// Limpio acumulador
+		
+		cbz r0, potencia_end		// Checkear si *vecIn es NULL
+		cbz r1, potencia_end		// Checkear si longitud es cero	
+		
+		mov r2, r1					// Guardo longitud en indice	
+		
+		// Evaluar paridad
+		ands r5, r1, #1				// Checkear si longitud es par
+		beq potencia_loop				
+		
+		// Impar: primer caso
+		sub r2, #1     				// Decrementar en 1 indice de vecIn
 
+		ldrsh r3, [r0, r2, LSL #1]	// Cargar siguiente elemento de vecIn		
+		smlad r4, r3, r3, r4		// Elevar al cuadrado  y acumular
+	
+		// Par: resto de elementos
+	potencia_loop:
+		sub r2, #2     				// Decrementar en 2 indice de vecIn
 
+		ldrs r3, [r0, r2, LSL #2]	// Cargar siguiente elemento de vecIn	
+		smlad r4, r3, r3, r4		// Elevar al cuadrado  y acumular			
 
-
-
-
-
+		cbz r2, potencia_end		// Si indice de vecIn no es 0, repetir el loop
+		b potencia_loop
+		
+		div r4, r4, r1 				// Divido por la cantidad de elementos
+		
+	potencia_end:
+		mov r0, r4
+		pop {r4-r5}
+		bx lr               		// Volver de la función
 
 // **************************************************************************
 // Ejercicio 2A
@@ -105,7 +134,7 @@
 		cbz r3, medDif_end			// Checkear si longitud es cero
 
 	medDif_loop:
-		sub r3, #1     			// Decrementar en 1 indice n
+		sub r3, #1     				// Decrementar en 1 indice n
 
 		ldrsb r4, [r1, r3]			// Cargar siguiente elemento de x
 		ldrsb r5, [r2, r3]			// Cargar siguiente elemento de y
@@ -140,16 +169,44 @@
 .global asm_medDif_DSP
 .thumb_func
 	asm_medDif_DSP:
+		push {r4-r6}
 
+		cbz r0, medDif_end			// Checkear si *e es NULL
+		cbz r1, medDif_end			// Checkear si *x es NULL
+		cbz r2, medDif_end			// Checkear si *y es NULL
+		cbz r3, medDif_end			// Checkear si longitud es cero
 
+		// Evaluar paridad
+		ands r7, r3, #1				// Checkear si longitud es par
+		beq medDif_loop				
+		
+		// Impar: primer caso
+		ldrsb r4, [r1, r3]			// Cargar primer elemento de x
+		ldrsb r5, [r2, r3]			// Cargar primer elemento de y
 
+		//sub r6, r4, r5				// Resta x[n]-y[n]
+		//asr r6, r6, #1				// Divir entre 2
+		shsub8 r6, r4, r5			// x[n]-y[n]/2	
 
+		strb r6, [r0, r3]			// Cargar primer elemento de e	
 
+		// Par: resto de elementos
+	medDif_loop:
+		sub r3, #4     				// Decrementar en 1 indice n
 
+		ldr r4, [r1, r3, LSL #2]	// Cargar siguiente elemento de x
+		ldr r5, [r2, r3, LSL #2]	// Cargar siguiente elemento de y
 
+		shsub8 r6, r4, r5			// x[n]-y[n]/2
 
+		str r6, [r0, r3]			// Cargar siguiente elemento de e
 
+		cbz r3, medDif_end			// Si indice n no es 0, repetir el loop
+		b medDif_loop
 
+	medDif_end:
+		pop {r4-r6}
+		bx lr               		// Volver de la función
 
 // **************************************************************************
 // Ejercicio 3A
@@ -231,7 +288,44 @@
 // r0: *signal
 // r1: *eco
 // r2: longitud / indice de signal
+// r3: contiene el retraso de 20 ms en muestras: 882
+// r4: valor actual de signal
+// r5: valor defasado de signal
+// r6: valor actual de eco
+// r7: indice defasado de signal
 // **************************************************************************
 .global asm_eco_DSP
 .thumb_func
 	asm_eco_DSP:
+		push {r4-r7}
+
+		cbz r0, eco_end					// Checkear si *signal es NULL
+		cbz r1, eco_end					// Checkear si *eco es NULL
+		cbz r2, eco_end					// Checkear si longitud es cero
+		
+		mov r3, #882					// Inicializar retardo
+
+	eco_loop:
+		sub r2, #1     					// Decrementar en 1 indice n
+
+		ldrsh r4, [r0, r2, lsl #1]		// Cargar valor actual de signal[]
+		mov   r6, r4					// Copiar a salida
+
+		cmp   r2, r3					// Comparar índice <= 882
+		blt   eco_save
+
+		// Con eco
+		sub   r7, r2, r3
+		ldrsh r5, [r0, r7, lsl #1] 		// Cargar valor defasado de signal[]
+		asr   r5, r5, #1				// Dividir valor desfasado entre 2
+		add   r6, r4, r5				// Aplicar eco
+
+	eco_save:
+		strh  r6, [r1, r2, lsl #1]		// Guardar el resultado en eco[]
+
+		cbz   r2, eco_end				// Si indice no es 0, repetir el loop
+		b     eco_loop
+
+	eco_end:
+		pop {r4-r7}
+		bx lr               			// Volver de la función
