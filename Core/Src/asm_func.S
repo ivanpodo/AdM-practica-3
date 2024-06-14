@@ -46,7 +46,7 @@
 		cbz r2, potencia_end		// Si indice de vectorIn no es 0, repetir el loop
 		b potencia_loop
 
-		sdiv r4, r4, r1 				// Divido por la cantidad de elementos
+		sdiv r4, r4, r1 			// Divido por la cantidad de elementos
 
 	potencia_end:
 		mov r0, r4
@@ -66,44 +66,32 @@
 // r2: indice de vecIn
 // r3: valor actual
 // r4: acumulador
-// r5: paridad
 // **************************************************************************
 .global asm_potencia_DSP 
 .thumb_func 
 	asm_potencia_DSP: 
-		push {r4-r5}
+		push {r4}
 		mov r4, #0					// Limpio acumulador
 		
-		cbz r0, potencia_end		// Checkear si *vecIn es NULL
-		cbz r1, potencia_end		// Checkear si longitud es cero	
+		cbz r0, potencia_end_dsp	// Checkear si *vecIn es NULL
+		cbz r1, potencia_end_dsp	// Checkear si longitud es cero
 		
 		mov r2, r1					// Guardo longitud en indice	
 		
-		// Evaluar paridad
-		ands r5, r1, #1				// Checkear si longitud es par
-		beq potencia_loop				
-		
-		// Impar: primer caso
-		sub r2, #1     				// Decrementar en 1 indice de vecIn
+	potencia_loop_dsp:
+		sub   r2, #2     			// Decrementar en 2 indice de vecIn
 
-		ldrsh r3, [r0, r2, LSL #1]	// Cargar siguiente elemento de vecIn		
-		smlad r4, r3, r3, r4		// Elevar al cuadrado  y acumular
-	
-		// Par: resto de elementos
-	potencia_loop:
-		sub r2, #2     				// Decrementar en 2 indice de vecIn
+		ldr   r3, [r0, r2, LSL #1]	// Cargar siguiente elemento de vecIn
+		smlad r4, r3, r3, r4		// Elevar al cuadrado y acumular			
 
-		ldrs r3, [r0, r2, LSL #2]	// Cargar siguiente elemento de vecIn	
-		smlad r4, r3, r3, r4		// Elevar al cuadrado  y acumular			
-
-		cbz r2, potencia_end		// Si indice de vecIn no es 0, repetir el loop
-		b potencia_loop
+		cbz r2, potencia_end_dsp	// Si indice de vecIn no es 0, repetir el loop
+		b potencia_loop_dsp
 		
-		div r4, r4, r1 				// Divido por la cantidad de elementos
+		udiv r4, r4, r1 			// Divido por la cantidad de elementos
 		
-	potencia_end:
+	potencia_end_dsp:
 		mov r0, r4
-		pop {r4-r5}
+		pop {r4}
 		bx lr               		// Volver de la función
 
 // **************************************************************************
@@ -165,46 +153,34 @@
 // r1: *x
 // r2: *y
 // r3: longitud / indice de x e y
+// r4: x[n]
+// r5: y[n]
+// r6: e[n]
 // **************************************************************************
 .global asm_medDif_DSP
 .thumb_func
 	asm_medDif_DSP:
 		push {r4-r6}
 
-		cbz r0, medDif_end			// Checkear si *e es NULL
-		cbz r1, medDif_end			// Checkear si *x es NULL
-		cbz r2, medDif_end			// Checkear si *y es NULL
-		cbz r3, medDif_end			// Checkear si longitud es cero
+		cbz r0, medDif_end_dsp		// Checkear si *e es NULL
+		cbz r1, medDif_end_dsp		// Checkear si *x es NULL
+		cbz r2, medDif_end_dsp		// Checkear si *y es NULL
+		cbz r3, medDif_end_dsp		// Checkear si longitud es cero
 
-		// Evaluar paridad
-		ands r7, r3, #1				// Checkear si longitud es par
-		beq medDif_loop				
-		
-		// Impar: primer caso
-		ldrsb r4, [r1, r3]			// Cargar primer elemento de x
-		ldrsb r5, [r2, r3]			// Cargar primer elemento de y
+	medDif_loop_dsp:
+		sub r3, #4     				// Decrementar en 4 indice n
 
-		//sub r6, r4, r5				// Resta x[n]-y[n]
-		//asr r6, r6, #1				// Divir entre 2
-		shsub8 r6, r4, r5			// x[n]-y[n]/2	
+		ldr r4, [r1, r3]			// Cargar siguiente elemento de x
+		ldr r5, [r2, r3]			// Cargar siguiente elemento de y
 
-		strb r6, [r0, r3]			// Cargar primer elemento de e	
-
-		// Par: resto de elementos
-	medDif_loop:
-		sub r3, #4     				// Decrementar en 1 indice n
-
-		ldr r4, [r1, r3, LSL #2]	// Cargar siguiente elemento de x
-		ldr r5, [r2, r3, LSL #2]	// Cargar siguiente elemento de y
-
-		shsub8 r6, r4, r5			// x[n]-y[n]/2
+		shsub8 r6, r4, r5			// (x[n]-y[n])/2
 
 		str r6, [r0, r3]			// Cargar siguiente elemento de e
 
-		cbz r3, medDif_end			// Si indice n no es 0, repetir el loop
-		b medDif_loop
+		cbz r3, medDif_end_dsp		// Si indice n no es 0, repetir el loop
+		b medDif_loop_dsp
 
-	medDif_end:
+	medDif_end_dsp:
 		pop {r4-r6}
 		bx lr               		// Volver de la función
 
@@ -233,35 +209,35 @@
 	asm_eco:
 		push {r4-r7}
 
-		cbz r0, eco_end					// Checkear si *e es NULL
-		cbz r1, eco_end					// Checkear si *x es NULL
-		cbz r2, eco_end					// Checkear si longitud es cero
-		mov r3, #882					// Retardo
+		cbz r0, eco_end				// Checkear si *e es NULL
+		cbz r1, eco_end				// Checkear si *x es NULL
+		cbz r2, eco_end				// Checkear si longitud es cero
+		mov r3, #882				// Retardo
 
 	eco_loop:
-		sub r2, #1     					// Decrementar en 1 indice n
+		sub r2, #1     				// Decrementar en 1 indice n
 
-		ldrsh r4, [r0, r2, lsl #1]		// Cargar valor actual de signal[]
-		mov   r6, r4					// Copiar a salida
+		ldrsh r4, [r0, r2, lsl #1]	// Cargar valor actual de signal[]
+		mov   r6, r4				// Copiar a salida
 
-		cmp   r2, r3					// Comparar índice <= 882
+		cmp   r2, r3				// Comparar índice < 882
 		blt   eco_save
 
 		// Con eco
 		sub   r7, r2, r3
-		ldrsh r5, [r0, r7, lsl #1] 		// Cargar valor defasado de signal[]
-		asr   r5, r5, #1				// Dividir valor desfasado entre 2
-		add   r6, r4, r5				// Aplicar eco
+		ldrsh r5, [r0, r7, lsl #1] 	// Cargar valor defasado de signal[]
+		asr   r5, r5, #1			// Dividir valor desfasado entre 2
+		add   r6, r4, r5			// Aplicar eco
 
 	eco_save:
-		strh  r6, [r1, r2, lsl #1]		// Guardar el resultado en eco[]
+		strh  r6, [r1, r2, lsl #1]	// Guardar el resultado en eco[]
 
-		cbz   r2, eco_end				// Si indice no es 0, repetir el loop
+		cbz   r2, eco_end			// Si indice no es 0, repetir el loop
 		b     eco_loop
 
 	eco_end:
 		pop {r4-r7}
-		bx lr               			// Volver de la función
+		bx lr               		// Volver de la función
 
 // -------------------------------
 //    e[n]    = s[n] + s[n-882]/2
@@ -293,39 +269,41 @@
 // r5: valor defasado de signal
 // r6: valor actual de eco
 // r7: indice defasado de signal
+// r8: auxiliar eco (= 0)
 // **************************************************************************
 .global asm_eco_DSP
 .thumb_func
 	asm_eco_DSP:
-		push {r4-r7}
+		push {r4-r8}
 
-		cbz r0, eco_end					// Checkear si *signal es NULL
-		cbz r1, eco_end					// Checkear si *eco es NULL
-		cbz r2, eco_end					// Checkear si longitud es cero
+		cbz r0, eco_end_dsp			// Checkear si *signal es NULL
+		cbz r1, eco_end_dsp			// Checkear si *eco es NULL
+		cbz r2, eco_end_dsp			// Checkear si longitud es cero
 		
-		mov r3, #882					// Inicializar retardo
+		mov r3, #882				// Inicializar retardo
+		mov r8, #0					// Inicializa variable auxiliar
 
-	eco_loop:
-		sub r2, #1     					// Decrementar en 1 indice n
+	eco_loop_dsp:
+		sub r2, #2     				// Decrementar en 2 indice n
 
-		ldrsh r4, [r0, r2, lsl #1]		// Cargar valor actual de signal[]
-		mov   r6, r4					// Copiar a salida
+		ldr   r4, [r0, r2, LSL#1]	// Cargar valor actual de signal[]
+		mov   r6, r4				// Copiar a salida
 
-		cmp   r2, r3					// Comparar índice <= 882
-		blt   eco_save
+		cmp   r2, r3				// Comparar índice < 882
+		blt   eco_save_dsp
 
 		// Con eco
 		sub   r7, r2, r3
-		ldrsh r5, [r0, r7, lsl #1] 		// Cargar valor defasado de signal[]
-		asr   r5, r5, #1				// Dividir valor desfasado entre 2
-		add   r6, r4, r5				// Aplicar eco
+		ldr   r5, [r0, r7, LSL#1] 	// Cargar valor defasado de signal[]
+		shsub16 r5, r5, r8			// r5 = (r5 - 0) / 2 = r5 / 2
+		sadd16  r6, r4, r5			// Aplicar eco
 
-	eco_save:
-		strh  r6, [r1, r2, lsl #1]		// Guardar el resultado en eco[]
+	eco_save_dsp:
+		str  r6, [r1, r2, LSL#1]	// Guardar el resultado en eco[]
 
-		cbz   r2, eco_end				// Si indice no es 0, repetir el loop
-		b     eco_loop
+		cbz   r2, eco_end_dsp		// Si indice no es 0, repetir el loop
+		b     eco_loop_dsp
 
-	eco_end:
-		pop {r4-r7}
-		bx lr               			// Volver de la función
+	eco_end_dsp:
+		pop {r4-r8}
+		bx lr               		// Volver de la función

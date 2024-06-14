@@ -32,7 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define CANTIDAD_SAMPLES 4096U
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -86,29 +86,56 @@ int main(void)
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
 
-  int16_t vecIn[] = {1, -2, 3, -4, 5};
-  uint32_t longitud1 = sizeof(vecIn) / sizeof(vecIn[0]);
-  uint32_t potencia = asm_potencia(vecIn, longitud1);
-  (void)potencia;
+  int16_t vecIn[]     = {1, 2, 3, 4, 5, 6, -10, 2000};
+  uint32_t longitud1  = sizeof(vecIn) / sizeof(vecIn[0]);
+  
+  uint32_t potencia      = asm_potencia(vecIn, longitud1);
+  uint32_t potencia_DSP  = asm_potencia_DSP(vecIn, longitud1);
+  
+  int32_t resta1 = potencia - potencia_DSP;
+  (void)resta1;
 
-  int8_t x[] = {10, 20, 30, 40, 50};
-  int8_t y[] = {5, 15, 25, 35, 45};
+  int8_t x[] = {10, 20, 30, 40, 10, 20, 30, 40};
+  int8_t y[] = { 5, 15, 25, 35,  5, 15, 25, 35};
+
   uint16_t longitud2 = sizeof(x) / sizeof(x[0]);
   int8_t e[longitud2];
+  int8_t e_DSP[longitud2];
+  int8_t e_diff[longitud2];
 
   asm_medDif(e, x, y, longitud2);
+  asm_medDif_DSP(e_DSP, x, y, longitud2);
+
+  for (uint16_t i = 0; i < longitud2; i++)
+  {
+    e_diff[i] = e[i] - e_DSP[i];
+  }
+  (void)e_diff;
 
   //int16_t signal[] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
-  int16_t signal[4096];
-  for(uint16_t i = 0u; i < 4096u; i++)
+  int16_t signal[CANTIDAD_SAMPLES];
+
+  for(uint16_t i = 0u; i < CANTIDAD_SAMPLES; i++)
   {
 	  signal[i] = 0x10;
   }
   uint32_t longitud3 = sizeof(signal) / sizeof(signal[0]);
-  int16_t eco[4096];
+  int16_t eco[CANTIDAD_SAMPLES];
+  int16_t eco_DSP[CANTIDAD_SAMPLES];
+  int32_t eco_diff[CANTIDAD_SAMPLES];
 
   asm_eco(signal, eco, longitud3);
+  asm_eco_DSP(signal, eco_DSP, longitud3);
 
+  for (uint16_t i = 0u; i < longitud3; i++)
+  {
+    eco_diff[i] = eco[i] - eco_DSP[i];
+    if (0u != eco_diff[i])
+    {
+      (void)eco_diff[i]; // poner break
+    }
+  }
+  (void)eco_diff;
   /* USER CODE END 2 */
 
   /* Infinite loop */
