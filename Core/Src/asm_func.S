@@ -44,7 +44,7 @@
 		add r4, r3, r4				// Acumular
 
 		cbz r2, potencia_end		// Si indice de vectorIn no es 0, repetir el loop
-		b potencia_loop
+		b   potencia_loop
 
 		sdiv r4, r4, r1 			// Divido por la cantidad de elementos
 
@@ -81,8 +81,8 @@
 	potencia_loop_dsp:
 		sub   r2, #2     			// Decrementar en 2 indice de vecIn
 
-		ldr   r3, [r0, r2, LSL #1]	// Cargar siguiente elemento de vecIn
-		smlad r4, r3, r3, r4		// Elevar al cuadrado y acumular			
+		ldr   r3, [r0, r2, LSL #1]	// Cargar los dos siguiente elementos de vecIn
+		smlad r4, r3, r3, r4		// Elevar al cuadrado y acumular (r4 = r3 * r3 + r4)			
 
 		cbz r2, potencia_end_dsp	// Si indice de vecIn no es 0, repetir el loop
 		b potencia_loop_dsp
@@ -128,12 +128,12 @@
 		ldrsb r5, [r2, r3]			// Cargar siguiente elemento de y
 
 		sub r6, r4, r5				// Resta x[n]-y[n]
-		asr r6, r6, #1				// Divir entre 2
+		asr r6, r6, #1				// Dividir por 2
 
 		strb r6, [r0, r3]			// Cargar siguiente elemento de e
 
 		cbz r3, medDif_end			// Si indice n no es 0, repetir el loop
-		b medDif_loop
+		b   medDif_loop
 
 	medDif_end:
 		pop {r4-r6}
@@ -170,8 +170,8 @@
 	medDif_loop_dsp:
 		sub r3, #4     				// Decrementar en 4 indice n
 
-		ldr r4, [r1, r3]			// Cargar siguiente elemento de x
-		ldr r5, [r2, r3]			// Cargar siguiente elemento de y
+		ldr r4, [r1, r3]			// Cargar los siguientes 4 elementos de x
+		ldr r5, [r2, r3]			// Cargar los siguientes 4 elementos de y
 
 		shsub8 r6, r4, r5			// (x[n]-y[n])/2
 
@@ -212,12 +212,12 @@
 		cbz r0, eco_end				// Checkear si *e es NULL
 		cbz r1, eco_end				// Checkear si *x es NULL
 		cbz r2, eco_end				// Checkear si longitud es cero
-		mov r3, #882				// Retardo
+		mov r3, #882				// Inicializo retardo
 
 	eco_loop:
 		sub r2, #1     				// Decrementar en 1 indice n
 
-		ldrsh r4, [r0, r2, lsl #1]	// Cargar valor actual de signal[]
+		ldrsh r4, [r0, r2, LSL#1]	// Cargar valor actual de signal[]
 		mov   r6, r4				// Copiar a salida
 
 		cmp   r2, r3				// Comparar índice < 882
@@ -225,12 +225,12 @@
 
 		// Con eco
 		sub   r7, r2, r3
-		ldrsh r5, [r0, r7, lsl #1] 	// Cargar valor defasado de signal[]
+		ldrsh r5, [r0, r7, LSL#1] 	// Cargar valor defasado de signal[]
 		asr   r5, r5, #1			// Dividir valor desfasado entre 2
 		add   r6, r4, r5			// Aplicar eco
 
 	eco_save:
-		strh  r6, [r1, r2, lsl #1]	// Guardar el resultado en eco[]
+		strh  r6, [r1, r2, LSL#1]	// Guardar el resultado en eco[]
 
 		cbz   r2, eco_end			// Si indice no es 0, repetir el loop
 		b     eco_loop
@@ -280,8 +280,8 @@
 		cbz r1, eco_end_dsp			// Checkear si *eco es NULL
 		cbz r2, eco_end_dsp			// Checkear si longitud es cero
 		
-		mov r3, #882				// Inicializar retardo
-		mov r8, #0					// Inicializa variable auxiliar
+		mov r3, #882				// Inicializo retardo
+		mov r8, #0					// Inicializo variable auxiliar
 
 	eco_loop_dsp:
 		sub r2, #2     				// Decrementar en 2 indice n
@@ -293,8 +293,8 @@
 		blt   eco_save_dsp
 
 		// Con eco
-		sub   r7, r2, r3
-		ldr   r5, [r0, r7, LSL#1] 	// Cargar valor defasado de signal[]
+		sub   	r7, r2, r3
+		ldr   	r5, [r0, r7, LSL#1] // Cargar valor defasado de signal[]
 		shsub16 r5, r5, r8			// r5 = (r5 - 0) / 2 = r5 / 2
 		sadd16  r6, r4, r5			// Aplicar eco
 
@@ -306,4 +306,4 @@
 
 	eco_end_dsp:
 		pop {r4-r8}
-		bx lr               		// Volver de la función
+		bx  lr               		// Volver de la función
